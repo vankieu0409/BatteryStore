@@ -1,7 +1,9 @@
 using BatteryShop.Logging;
+
 using IdentityService.API.Extensions;
 using IdentityService.API.Middleware;
 using IdentityService.Infrastructure.Extensions;
+
 using Serilog;
 
 try
@@ -10,7 +12,7 @@ try
 
     // Cấu hình Serilog với các profile cụ thể theo môi trường
     builder.Host.ConfigureEnvironmentSpecificLogging(builder.Configuration, builder.Environment);
-    
+
     // Sử dụng các extension methods để cấu hình services
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
@@ -21,27 +23,27 @@ try
 
     var app = builder.Build();
 
-// Khởi tạo và seed database
-await app.InitializeDatabaseAsync();
+    // Khởi tạo và seed database
+    await app.InitializeDatabaseAsync();
 
-// Configure middleware pipeline
-// Thêm middleware xử lý lỗi - phải đặt đầu tiên trong pipeline
-app.UseErrorHandling();
+    // Configure middleware pipeline
+    // Thêm middleware xử lý lỗi - phải đặt đầu tiên trong pipeline
+    app.UseErrorHandling();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowSpecificOrigin");
-app.UseDeviceInfo(); // Thêm middleware lấy thông tin thiết bị
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
+    app.UseHttpsRedirection();
+    app.UseCors("AllowSpecificOrigin");
+    app.UseDeviceInfo(); // Thêm middleware lấy thông tin thiết bị
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
 
-app.Run();
+    app.Run();
 }
 catch (Exception ex)
 {

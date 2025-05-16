@@ -56,11 +56,11 @@ public static class ServiceExtensions
         {
             options.AddPolicy("DefaultPolicy", builder =>
             {
-                builder.WithOrigins(configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ??
-                        new[] { "http://localhost:3000", "https://localhost:3000" })
+                builder.AllowAnyOrigin() //.WithOrigins(configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ??
+                    // new[] { "http://localhost:3000", "https://localhost:3000" })
                     .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
+                    .AllowAnyHeader();
+                //.AllowCredentials();
             });
         });
 

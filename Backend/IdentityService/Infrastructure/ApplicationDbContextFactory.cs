@@ -18,7 +18,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             .AddJsonFile("appsettings.json")
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("IdentityDb");
         optionsBuilder.UseSqlServer(connectionString);
         // Có thể hardcode hoặc đọc từ file nếu thích
         optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);

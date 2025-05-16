@@ -10,9 +10,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasKey(u => u.Id);
         
+        // Chỉ định tên bảng trong database
+        builder.ToTable("Users");
+        
         builder.Property(u => u.UserName)
             .HasMaxLength(100)
             .IsRequired();
+            
+        // Tạo index cho UserName để tìm kiếm nhanh hơn và đảm bảo tính duy nhất
+        builder.HasIndex(u => u.UserName)
+            .IsUnique();
             
         builder.OwnsOne(u => u.Email, email =>
         {
@@ -20,6 +27,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 .HasColumnName("Email")
                 .HasMaxLength(256)
                 .IsRequired();
+                
+            // Tạo index cho Email để tìm kiếm và login nhanh hơn
+            email.HasIndex(e => e.Value)
+                .IsUnique();
         });
         
         builder.Property(u => u.PasswordHash)

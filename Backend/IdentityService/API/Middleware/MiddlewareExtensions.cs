@@ -6,4 +6,5 @@ public static class MiddlewareExtensions
     {
         return builder.UseMiddleware<ErrorHandlingMiddleware>();
     }
+    
 }

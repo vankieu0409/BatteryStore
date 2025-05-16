@@ -10,6 +10,9 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
     {
         builder.HasKey(r => r.Id);
         
+        // Chỉ định tên bảng trong database
+        builder.ToTable("Roles");
+        
         builder.Property(r => r.Name)
             .HasMaxLength(100)
             .IsRequired();

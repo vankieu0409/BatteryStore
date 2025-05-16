@@ -1,11 +1,8 @@
 using IdentityService.Domain.Entities;
-using IdentityService.Domain.Interfaces;
 using IdentityService.Domain.ValueObjects;
 using IdentityService.Domain.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace IdentityService.Infrastructure.Data
 {

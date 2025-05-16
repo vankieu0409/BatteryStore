@@ -27,6 +27,7 @@ public static class LoggingConfig
                         NumberOfShards = 2,
                         NumberOfReplicas = 1
                     })
+                    .WriteTo.Console()
                     .CreateLogger();
             }
         }

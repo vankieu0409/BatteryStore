@@ -30,10 +30,9 @@ namespace IdentityService.Infrastructure.Extensions
                 logger.LogError(ex, "Xảy ra lỗi khi khởi tạo cơ sở dữ liệu");
                 throw;
             }
-        }
-
-        public static IServiceCollection AddDatabaseSeeder(this IServiceCollection services)
+        }        public static IServiceCollection AddDatabaseSeeder(this IServiceCollection services)
         {
+            // Đăng ký DatabaseSeeder như một dịch vụ tạm thời để tránh vấn đề về vòng đời
             services.AddTransient<DatabaseSeeder>();
             return services;
         }

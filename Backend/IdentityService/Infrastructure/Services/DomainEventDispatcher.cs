@@ -1,4 +1,5 @@
 using BatteryShop.Logging;
+using IdentityService.Application.Interfaces;
 using IdentityService.Domain.Common;
 using Microsoft.Extensions.Logging;
 
@@ -30,9 +31,4 @@ public class DomainEventDispatcher : IDomainEventDispatcher
             return Task.CompletedTask;
         });
     }
-}
-
-public interface IDomainEventDispatcher
-{
-   Task DispatchAsync(IDomainEvent domainEvent);
 }

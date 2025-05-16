@@ -1,6 +1,4 @@
 using BatteryShop.Logging;
-using IdentityService.Domain.Interfaces;
-using IdentityService.Domain.Services;
 using IdentityService.Application.Interfaces;
 using IdentityService.Application.Services;
 using IdentityService.Application.Behaviors;

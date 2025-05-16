@@ -15,10 +15,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\Logging\Logging.csproj" />
     <ProjectReference Include="..\Domain\IdentityService.Domain.csproj" />
+    <ProjectReference Include="..\Application\IdentityService.Application.csproj" />
   </ItemGroup>
 
 </Project>

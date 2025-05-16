@@ -15,8 +15,9 @@ public static class ServiceExtensions
         services.AddControllers();
 
         // Đăng ký Application và Infrastructure services
-        services.AddApplicationServices();
+        
         services.AddInfrastructureServices(configuration);
+        services.AddApplicationServices();
         return services;
     }
 
@@ -104,8 +105,8 @@ public static class ServiceExtensions
                     //.WithOrigins(configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? 
                     //            new[] { "http://localhost:3000", "https://localhost:3000" })
                     .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
+                    .AllowAnyHeader();
+                   // .AllowCredentials();
             });
         });
     }
