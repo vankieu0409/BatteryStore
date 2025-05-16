@@ -21,9 +21,7 @@ public static class ObservabilityExtensions
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(serviceName: ServiceName, serviceVersion: ServiceVersion)
             .AddTelemetrySdk()
-            .AddEnvironmentVariableDetector();
-
-        // C?u h�nh OpenTelemetry Tracing
+            .AddEnvironmentVariableDetector();        // Cấu hình OpenTelemetry Tracing
         services.AddOpenTelemetry()
             .WithTracing(builder => builder
                 .SetResourceBuilder(resourceBuilder)
@@ -51,25 +49,19 @@ public static class ObservabilityExtensions
                 })
                 .AddSource(ActivitySource.Name)
                 .AddConsoleExporter()
-            );
-
-        // C?u h�nh OpenTelemetry Metrics
+            );        // Cấu hình OpenTelemetry Metrics
         services.AddOpenTelemetry()
             .WithMetrics(builder => builder
                 .SetResourceBuilder(resourceBuilder)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()
-                // .AddProcessInstrumentation() - Kh�ng c� s?n trong .NET 9
+                // .AddProcessInstrumentation() - Không có sẵn trong .NET 9
                 .AddConsoleExporter()
-            );
-
-        // Th�m Health Checks c? b?n
+            );        // Thêm Health Checks cơ bản
         services.AddHealthChecks()
             .AddCheck("gateway_alive", () => HealthCheckResult.Healthy("Gateway is running"), 
-                tags: new[] { "infrastructure" });
-
-        // Ki?m tra c�c microservices
+                tags: new[] { "infrastructure" });        // Kiểm tra các microservices
         foreach (var clusterConfig in configuration.GetSection("ReverseProxy:Clusters").GetChildren())
         {
             var destinations = clusterConfig.GetSection("Destinations").GetChildren();
@@ -88,32 +80,9 @@ public static class ObservabilityExtensions
             
         return services;
     }
-
-    public static IApplicationBuilder UseHealthChecksConfig(this IApplicationBuilder app)
-    {
-        app.UseHealthChecks("/health", new HealthCheckOptions
-        {
-            Predicate = _ => true,
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-        });
-
-        app.UseHealthChecks("/health/infrastructure", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("infrastructure"),
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-        });
-
-        app.UseHealthChecks("/health/services", new HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains("services"),
-            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-        });
-
-        return app;
-    }
 }
 
-// Custom health check ??? Gateway
+// Custom health check cho Gateway
 public class ApiGatewayHealthCheck : IHealthCheck
 {
     private readonly ILogger<ApiGatewayHealthCheck> _logger;
@@ -121,14 +90,12 @@ public class ApiGatewayHealthCheck : IHealthCheck
     public ApiGatewayHealthCheck(ILogger<ApiGatewayHealthCheck> logger)
     {
         _logger = logger;
-    }
-
-    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    }    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
-            // Ki?m tra c�c t�i nguy�n c?n thi?t cho Gateway
-            // V� d?: b? nh?, k?t n?i ??n c�c service quan tr?ng
+            // Kiểm tra các tài nguyên cần thiết cho Gateway
+            // Ví dụ: bộ nhớ, kết nối đến các service quan trọng
             
             return Task.FromResult(HealthCheckResult.Healthy("API Gateway is running normally"));
         }

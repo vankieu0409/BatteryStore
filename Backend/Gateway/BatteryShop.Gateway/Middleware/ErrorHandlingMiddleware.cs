@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace BatteryShop.Gateway.Middleware;
 
 /// <summary>
-/// Middleware x? l� l?i chung cho Gateway
+/// Middleware xử lý lỗi chung cho Gateway
 /// </summary>
 public class ErrorHandlingMiddleware
 {
@@ -33,53 +33,40 @@ public class ErrorHandlingMiddleware
             _logger.LogError(ex, "Gateway error: {ErrorMessage}", ex.Message);
             await HandleExceptionAsync(context, ex);
         }
-    }
-
-    private Task HandleExceptionAsync(HttpContext context, Exception exception)
+    }    private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        _logger.LogError(exception, "L?i kh�ng x? l� ???c: {ErrorMessage}", exception.Message);
+        _logger.LogError(exception, "Lỗi không xử lý được: {ErrorMessage}", exception.Message);
 
-        var code = HttpStatusCode.InternalServerError; // 500 n?u kh�ng x�c ??nh ???c lo?i l?i
+        var code = HttpStatusCode.InternalServerError; // 500 nếu không xác định được loại lỗi
         var errorResponse = new ErrorResponse
         {
             Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-            Title = "?� x?y ra l?i trong qu� tr�nh x? l� y�u c?u.",
+            Title = "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.",
             Status = (int)code
-        };
-
-        // X? l� c�c lo?i exception c? th?
+        };        // Xử lý các loại exception cụ thể
         switch (exception)
-        {
-            case UnauthorizedAccessException:
+        {            case UnauthorizedAccessException:
                 code = HttpStatusCode.Unauthorized;
                 errorResponse.Type = "https://tools.ietf.org/html/rfc7235#section-3.1";
-                errorResponse.Title = "Kh�ng c� quy?n truy c?p.";
+                errorResponse.Title = "Không có quyền truy cập.";
                 errorResponse.Status = (int)code;
-                break;
-
-            case KeyNotFoundException:
+                break;            case KeyNotFoundException:
                 code = HttpStatusCode.NotFound;
                 errorResponse.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
-                errorResponse.Title = "Kh�ng t�m th?y t�i nguy�n y�u c?u.";
+                errorResponse.Title = "Không tìm thấy tài nguyên yêu cầu.";
                 errorResponse.Status = (int)code;
-                break;
-
-            case ApplicationException when exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase):
+                break;            case ApplicationException when exception.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase):
                 code = HttpStatusCode.GatewayTimeout;
                 errorResponse.Type = "https://tools.ietf.org/html/rfc7231#section-6.6.5";
-                errorResponse.Title = "Y�u c?u qu� th?i gian x? l�.";
+                errorResponse.Title = "Yêu cầu quá thời gian xử lý.";
                 errorResponse.Status = (int)code;
-                break;
-
-            case InvalidOperationException:
+                break;            case InvalidOperationException:
                 code = HttpStatusCode.BadRequest;
                 errorResponse.Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
-                errorResponse.Title = "Y�u c?u kh�ng h?p l?.";
+                errorResponse.Title = "Yêu cầu không hợp lệ.";
                 errorResponse.Status = (int)code;
                 break;
-        }
-
-        // Th�m chi ti?t l?i trong m�i tr??ng ph�t tri?n
+        }        // Thêm chi tiết lỗi trong môi trường phát triển
         if (_environment.IsDevelopment())
         {
             errorResponse.Detail = exception.ToString();
@@ -103,16 +90,5 @@ public class ErrorHandlingMiddleware
         public int Status { get; set; }
         public string? Detail { get; set; }
         public Dictionary<string, string[]>? Errors { get; set; }
-    }
-}
-
-/// <summary>
-/// Extension method ?? th�m ErrorHandlingMiddleware v�o pipeline
-/// </summary>
-public static class ErrorHandlingMiddlewareExtensions
-{
-    public static IApplicationBuilder UseErrorHandling(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<ErrorHandlingMiddleware>();
     }
 }

@@ -15,11 +15,10 @@ public class RequestResponseLoggingMiddleware
     }
 
     public async Task InvokeAsync(HttpContext context)
-    {
-        // ?o th?i gian x? l� request
+    {        // Đo thời gian xử lý request
         var stopwatch = Stopwatch.StartNew();
         
-        // Ghi log th�ng tin request
+        // Ghi log thông tin request
         var requestBody = await GetRequestBodyAsync(context.Request);
         var logContext = new
         {
@@ -35,19 +34,17 @@ public class RequestResponseLoggingMiddleware
         };
 
         _logger.LogInformation("HTTP Request: {RequestMethod} {RequestPath}{RequestQuery}", 
-            context.Request.Method, context.Request.Path, context.Request.QueryString.ToString());
-
-        try
+            context.Request.Method, context.Request.Path, context.Request.QueryString.ToString());        try
         {
-            // Cho ph�p ??c l?i response body b?ng c�ch thay ??i response stream
+            // Cho phép đọc lại response body bằng cách thay đổi response stream
             var originalBodyStream = context.Response.Body;
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
-            // Ti?p t?c pipeline
+            // Tiếp tục pipeline
             await _next(context);
             
-            // Ghi log th�ng tin response
+            // Ghi log thông tin response
             var responseBodyText = await GetResponseBodyAsync(context.Response);
             var elapsedMs = stopwatch.ElapsedMilliseconds;
 
@@ -58,25 +55,21 @@ public class RequestResponseLoggingMiddleware
                 StatusCode = context.Response.StatusCode,
                 ResponseHeaders = GetFilteredHeaders(context.Response.Headers),
                 ResponseBody = responseBodyText
-            };
-
-            _logger.LogInformation("HTTP Response {StatusCode} completed in {ElapsedMilliseconds}ms", 
+            };            _logger.LogInformation("HTTP Response {StatusCode} completed in {ElapsedMilliseconds}ms", 
                 context.Response.StatusCode, elapsedMs);
 
-            // Copy response body tr? l?i stream g?c ?? client nh?n ???c
+            // Copy response body trả lại stream gốc để client nhận được
             responseBody.Seek(0, SeekOrigin.Begin);
             await responseBody.CopyToAsync(originalBodyStream);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing request");
-            throw; // N�m l?i exception ?? middleware x? l� l?i c� th? b?t ???c
+            throw; // Ném lại exception để middleware xử lý lỗi có thể bắt được
         }
-    }
-
-    private async Task<string> GetRequestBodyAsync(HttpRequest request)
+    }    private async Task<string> GetRequestBodyAsync(HttpRequest request)
     {
-        // Kh�ng ghi log body cho c�c lo?i n?i dung nh?y c?m ho?c l?n
+        // Không ghi log body cho các loại nội dung nhạy cảm hoặc lớn
         if (!IsTextBasedContentType(request.ContentType) || request.ContentLength > 10240)
             return "[Body not logged]";
 
@@ -88,18 +81,16 @@ public class RequestResponseLoggingMiddleware
             leaveOpen: true);
         var body = await reader.ReadToEndAsync();
         
-        // Reset position ?? c� th? ??c l?i sau n�y
+        // Reset position để có thể đọc lại sau này
         request.Body.Seek(0, SeekOrigin.Begin);
         
-        // L?c th�ng tin nh?y c?m
+        // Lọc thông tin nhạy cảm
         body = FilterSensitiveData(body);
         
         return body;
-    }
-
-    private async Task<string> GetResponseBodyAsync(HttpResponse response)
+    }    private async Task<string> GetResponseBodyAsync(HttpResponse response)
     {
-        // Kh�ng ghi log body cho c�c lo?i n?i dung nh?y c?m ho?c l?n
+        // Không ghi log body cho các loại nội dung nhạy cảm hoặc lớn
         if (!IsTextBasedContentType(response.ContentType) || response.ContentLength > 10240)
             return "[Body not logged]";
             
@@ -107,7 +98,7 @@ public class RequestResponseLoggingMiddleware
         var text = await new StreamReader(response.Body).ReadToEndAsync();
         response.Body.Seek(0, SeekOrigin.Begin);
         
-        // L?c th�ng tin nh?y c?m
+        // Lọc thông tin nhạy cảm
         text = FilterSensitiveData(text);
         
         return text;
@@ -123,15 +114,13 @@ public class RequestResponseLoggingMiddleware
                mediaType == "application/json" ||
                mediaType == "application/xml" ||
                mediaType == "application/javascript";
-    }
-
-    private IDictionary<string, string> GetFilteredHeaders(IHeaderDictionary headers)
+    }    private IDictionary<string, string> GetFilteredHeaders(IHeaderDictionary headers)
     {
         var result = new Dictionary<string, string>();
         
         foreach (var header in headers)
         {
-            // Kh�ng ghi log m?t s? header nh?y c?m
+            // Không ghi log một số header nhạy cảm
             if (header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
                 header.Key.Equals("Cookie", StringComparison.OrdinalIgnoreCase))
             {
@@ -144,14 +133,12 @@ public class RequestResponseLoggingMiddleware
         }
         
         return result;
-    }
-
-    private string FilterSensitiveData(string content)
+    }    private string FilterSensitiveData(string content)
     {
         if (string.IsNullOrEmpty(content))
             return content;
 
-        // L?c c�c th�ng tin nh?y c?m (v� d?: password, token)
+        // Lọc các thông tin nhạy cảm (ví dụ: password, token)
         content = System.Text.RegularExpressions.Regex.Replace(
             content,
             "\"password\"\\s*:\\s*\"[^\"]*\"", 
@@ -165,13 +152,5 @@ public class RequestResponseLoggingMiddleware
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         
         return content;
-    }
-}
-
-public static class RequestResponseLoggingMiddlewareExtensions
-{
-    public static IApplicationBuilder UseRequestResponseLogging(this IApplicationBuilder builder)
-    {
-        return builder.UseMiddleware<RequestResponseLoggingMiddleware>();
     }
 }

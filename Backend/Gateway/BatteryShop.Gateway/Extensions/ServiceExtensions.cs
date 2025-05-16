@@ -1,3 +1,6 @@
+using HealthChecks.UI.Client;
+
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 namespace BatteryShop.Gateway.Extensions;
@@ -21,7 +24,7 @@ public static class ServiceExtensions
                 }
             });
 
-            // C?u h�nh Swagger ?? s? d?ng JWT Bearer Authentication
+            // Cấu hình Swagger để sử dụng JWT Bearer Authentication
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -52,18 +55,64 @@ public static class ServiceExtensions
 
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
+        var allowedOrigins = configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ?? 
+            new[] { "http://localhost:3000", "https://localhost:3000" };
+
         services.AddCors(options =>
         {
-            options.AddPolicy("DefaultPolicy", builder =>
+            options.AddPolicy("DefaultPolicy", policy =>
             {
-                builder.AllowAnyOrigin() //.WithOrigins(configuration.GetSection("CORS:AllowedOrigins").Get<string[]>() ??
-                    // new[] { "http://localhost:3000", "https://localhost:3000" })
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
-                //.AllowCredentials();
+                    .AllowCredentials();
             });
         });
 
+        return services;
+    }
+
+    public static IApplicationBuilder UseHealthChecksConfig(this IApplicationBuilder app)
+    {
+        app.UseHealthChecks("/health", new HealthCheckOptions
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.UseHealthChecks("/health/infrastructure", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("infrastructure"),
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.UseHealthChecks("/health/services", new HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains("services"),
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        return app;
+    }
+
+    public static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Đăng ký HttpClient cho IdentityService
+        services.AddHttpClient("identity-service", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:5001/");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+        
+        // Đăng ký HttpClient cho ProductService
+        services.AddHttpClient("product-service", client =>
+        {
+            client.BaseAddress = new Uri("https://localhost:5002/");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+        
+        // Các HttpClient khác có thể được thêm vào tương tự
+        
         return services;
     }
 }

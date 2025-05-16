@@ -5,9 +5,17 @@ using BatteryShop.Gateway.Handlers;
 using BatteryShop.Gateway.Extensions;
 using BatteryShop.Gateway.Middleware;
 using BatteryShop.Logging;
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+using Ocelot.Cache.CacheManager;
+using Ocelot.Provider.Polly;
 
 // Sử dụng Serilog logging
 var builder = WebApplication.CreateBuilder(args);
+
+// Thêm cấu hình Ocelot
+builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile($"ocelot.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
 // Cấu hình logging bằng Serilog
 builder.Host.AddSerilogLogging();
@@ -25,18 +33,30 @@ builder.Services.AddHttpClientLogging(options =>
 // Thêm HttpContextAccessor để truy cập HttpContext từ DelegatingHandler
 builder.Services.AddHttpContextAccessor();
 
-// Đăng ký AuthenticationDelegatingHandler (vẫn đăng ký nhưng sẽ không sử dụng trực tiếp)
+// Đăng ký AuthenticationDelegatingHandler
 builder.Services.AddTransient<AuthenticationDelegatingHandler>();
 
-// Thêm YARP Reverse Proxy và cấu hình delegates
-builder.Services
-    .AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .AddRateLimiting()
-    .AddTransforms();
+// Đăng ký HttpClient cho các services
+builder.Services.AddHttpClients(builder.Configuration);
+
+// Thêm Health checks
+builder.Services.AddHealthChecks()
+    .AddUrlGroup(new Uri("https://localhost:5001/health"), "Identity Service")
+    .AddUrlGroup(new Uri("https://localhost:5002/health"), "Product Service");
+
+// Thêm Ocelot và các tính năng bổ sung
+builder.Services.AddOcelot(builder.Configuration)
+    .AddPolly()
+    .AddCacheManager(x => 
+    {
+        x.WithDictionaryHandle();
+    });
 
 // Thêm CORS với chính sách mở rộng
 builder.Services.AddCorsPolicy(builder.Configuration);
+
+// Thêm Rate Limiting
+builder.Services.AddOcelotRateLimiting();
 
 // Xác thực JWT
 builder.Services.AddAuthentication(options =>
@@ -86,8 +106,7 @@ builder.Services.AddAuthentication(options =>
 // Thêm Swagger nâng cao
 builder.Services.AddSwaggerDocumentation();
 
-// Rate limiting
-builder.Services.AddRateLimiter();
+// Rate limiting đã được thiết lập trong AddOcelotRateLimiting()
 
 var app = builder.Build();
 
@@ -111,6 +130,9 @@ app.UseCors("DefaultPolicy");
 // Rate limiting middleware
 app.UseRateLimiter();
 
+// Middleware xác thực token tùy chỉnh
+app.UseAuthenticationMiddleware();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -121,8 +143,8 @@ app.UseHealthChecksConfig();
 app.MapGet("/", () => "BatteryShop API Gateway")
    .WithName("Root");
 
-// YARP Reverse Proxy
-app.MapReverseProxy();
+// Sử dụng Ocelot middleware
+await app.UseOcelot();
 
 // Ghi log khi ứng dụng khởi động
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
