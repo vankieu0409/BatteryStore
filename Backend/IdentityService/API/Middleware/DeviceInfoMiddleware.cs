@@ -9,40 +9,35 @@ public class DeviceInfoMiddleware
     public DeviceInfoMiddleware(RequestDelegate next)
     {
         _next = next;
-    }
-
-    public async Task InvokeAsync(HttpContext context)
+    }    public async Task InvokeAsync(HttpContext context)
     {
-        // ???ng d?n API ??ng nh?p
+        // Đường dẫn API đăng nhập
         if (context.Request.Path.Value?.EndsWith("/login") == true && 
             context.Request.Method == "POST")
         {
-            // L?u stream ban ??u
-            var originalBodyStream = context.Response.Body;
-
-            try
+            // Lưu stream ban đầu
+            var originalBodyStream = context.Response.Body;            try
             {
-                // Cho ph�p ??c request body nhi?u l?n
+                // Cho phép đọc request body nhiều lần
                 context.Request.EnableBuffering();
                 
-                // L?y th�ng tin thi?t b? t? User-Agent
+                // Lấy thông tin thiết bị từ User-Agent
                 var userAgent = context.Request.Headers.UserAgent.ToString();
                 
-                // L?y ??a ch? IP
+                // Lấy địa chỉ IP
                 var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                 
-                // Chu?n b? th�ng tin thi?t b?
+                // Chuẩn bị thông tin thiết bị
                 var deviceInfo = $"{userAgent} | IP: {ipAddress}";
-                
-                // L?u th�ng tin v�o HttpContext ?? controller c� th? s? d?ng
+                  // Lưu thông tin vào HttpContext để controller có thể sử dụng
                 context.Items["DeviceInfo"] = deviceInfo;
                 
-                // Ti?p t?c pipeline
+                // Tiếp tục pipeline
                 await _next(context);
             }
             finally
             {
-                // ??m b?o tr? v? stream ban ??u
+                // Đảm bảo trả về stream ban đầu
                 context.Response.Body = originalBodyStream;
             }
         }

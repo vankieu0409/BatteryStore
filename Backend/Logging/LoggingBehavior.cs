@@ -4,8 +4,8 @@ using Microsoft.Extensions.Logging;
 namespace BatteryShop.Logging;
 
 /// <summary>
-/// L?p h? tr? ghi log các request và response c?a các service
-/// Có th? s? d?ng v?i MediatR pipeline behavior
+/// L?p h? tr? ghi log cï¿½c request vï¿½ response c?a cï¿½c service
+/// Cï¿½ th? s? d?ng v?i MediatR pipeline behavior
 /// </summary>
 /// <typeparam name="TRequest">Lo?i request</typeparam>
 /// <typeparam name="TResponse">Lo?i response</typeparam>
@@ -19,11 +19,11 @@ public class LoggingBehavior<TRequest, TResponse>
     }
     
     /// <summary>
-    /// X? lý request và ghi log thông tin
+    /// X? lï¿½ request vï¿½ ghi log thï¿½ng tin
     /// </summary>
-    /// <param name="request">Request c?n x? lý</param>
+    /// <param name="request">Request c?n x? lï¿½</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <param name="next">Hàm x? lý ti?p theo trong pipeline</param>
+    /// <param name="next">Hï¿½m x? lï¿½ ti?p theo trong pipeline</param>
     /// <returns>Response t? handler</returns>
     public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, 
         Func<TRequest, CancellationToken, Task<TResponse>> next)
@@ -57,21 +57,16 @@ public class LoggingBehavior<TRequest, TResponse>
     }
     
     /// <summary>
-    /// L?c thông tin nh?y c?m t? request tr??c khi ghi log
+    /// L?c thï¿½ng tin nh?y c?m t? request tr??c khi ghi log
     /// </summary>
     private object SanitizeRequest(TRequest request)
     {
-        // ?ây là n?i b?n có th? tri?n khai logic ?? l?c các tr??ng nh?y c?m nh? m?t kh?u, token, v.v.
-        // Ví d?:
+        // ?ï¿½y lï¿½ n?i b?n cï¿½ th? tri?n khai logic ?? l?c cï¿½c tr??ng nh?y c?m nh? m?t kh?u, token, v.v.
+        // Vï¿½ d?:
         if (request == null)
             return null;
         
-        // ??n gi?n là ch? tr? v? ki?u c?a request n?u b?n không mu?n log n?i dung
-        // return typeof(TRequest).Name;
-        
-        // Ho?c b?n có th? tri?n khai logic l?c ph?c t?p h?n
-        // Ví d?: clone request và gán giá tr? "[REDACTED]" cho các tr??ng nh?y c?m
-        
+               
         return request;
     }
 }

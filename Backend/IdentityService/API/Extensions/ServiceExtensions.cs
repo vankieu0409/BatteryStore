@@ -36,12 +36,11 @@ public static class ServiceExtensions
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,                ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["JWT:Issuer"],
                 ValidAudience = configuration["JWT:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                    configuration["JWT:SecretKey"] ?? "super_secret_key_123!@#_beu_sap_gay_beu_khong_beo")),
+                    configuration["JWT:SecretKey"] ?? "super_secret_key_123!@#_for_gateway_validation")),
                 ClockSkew = TimeSpan.Zero
             };
             options.Events = new JwtBearerEvents
